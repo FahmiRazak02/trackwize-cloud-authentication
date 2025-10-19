@@ -22,19 +22,12 @@ public class JWTUtil {
 
     private final Key secretKey;
 
-    @Value("${jwt.defaultAccessTokenTimeout}")
-    private String defaultAccessTokenTimeout;
-
     public JWTUtil(@Value("${jwt.secret}") String base64Secret) {
         byte[] keyBytes = Decoders.BASE64.decode(base64Secret);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(Map<String, Object> claims, String subject, String accessTokenTimeout) {
-
-        if (accessTokenTimeout.isBlank()) {
-            accessTokenTimeout = defaultAccessTokenTimeout;
-        }
 
         long expirationMillis = Integer.parseInt(accessTokenTimeout) * 1000L;
         return Jwts.builder()

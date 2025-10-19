@@ -48,4 +48,13 @@ public class ErrorConst {
 
     public static final String SESSION_EXPIRED_CODE = "20007";
     public static final String SESSION_EXPIRED_MSG = "Session has expired";
+
+    public static  final String GENERATE_TOKEN_ERROR_CODE = "20008";
+    public static  final String GENERATE_TOKEN_ERROR_MSG = "Token generation failed. ";
+
+    public static  final String PERSIST_TOKEN_ERROR_CODE = "20009";
+    public static  final String PERSIST_TOKEN_ERROR_MSG = "Persisting token to database, failed. ";
+
+    public static final String USER_ALREADY_LOGGED_IN_CODE = "20010";
+    public static final String USER_ALREADY_LOGGED_IN_MSG = "User is already logged in. Please log out before logging in again.";
 }

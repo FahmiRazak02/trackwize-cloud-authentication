@@ -4,27 +4,35 @@ import com.trackwize.cloud.authentication.constant.ErrorConst;
 import com.trackwize.cloud.authentication.exception.TrackWizeException;
 import com.trackwize.cloud.authentication.mapper.UserMapper;
 import com.trackwize.cloud.authentication.model.dto.AuthenticationReqDTO;
+import com.trackwize.cloud.authentication.model.dto.AuthenticationResDTO;
+import com.trackwize.cloud.authentication.model.dto.TokenReqDTO;
 import com.trackwize.cloud.authentication.model.entity.User;
 import com.trackwize.cloud.authentication.util.EncryptUtil;
 import com.trackwize.cloud.authentication.util.JWTUtil;
 import com.trackwize.cloud.authentication.util.PasswordUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
 
+    @Value("${jwt.defaultAccessTokenTimeout}")
+    private String defaultAccessTokenTimeout;
+
+    @Value("${jwt.defaultRefreshTokenTimeout}")
+    private String defaultRefreshTokenTimeout;
+
+    private final TokenService tokenService;
     private final UserMapper userMapper;
     private final JWTUtil jwtUtil;
 
-    public String validateCredentials(AuthenticationReqDTO reqDTO) throws TrackWizeException {
+    public AuthenticationResDTO validateCredentials(AuthenticationReqDTO reqDTO) throws TrackWizeException {
         log.info("---------- validateCredentials() ----------");
+        AuthenticationResDTO resDTO = new AuthenticationResDTO();
 
         User user = userMapper.findByEmail(reqDTO.getEmail());
         if (user == null) {
@@ -42,25 +50,39 @@ public class AuthenticationService {
             );
         }
 
-        String token = generateToken(user);
-        if (token.isEmpty() || token == null) {
+        boolean isActive = tokenService.hasActiveSession(user);
+        if (isActive) {
             throw new TrackWizeException(
-                    ErrorConst.INTERNAL_SERVER_ERROR_CODE,
-                    ErrorConst.INTERNAL_SERVER_ERROR_MSG
+                    ErrorConst.USER_ALREADY_LOGGED_IN_CODE,
+                    ErrorConst.USER_ALREADY_LOGGED_IN_MSG
             );
         }
 
-        return token;
-    }
+        String accessToken = tokenService.generateToken(user, defaultAccessTokenTimeout);
+        String refreshToken = tokenService.generateToken(user, defaultRefreshTokenTimeout);
+        if (accessToken.isEmpty() || refreshToken.isEmpty()) {
+            throw new TrackWizeException(
+                    ErrorConst.GENERATE_TOKEN_ERROR_CODE,
+                    ErrorConst.GENERATE_TOKEN_ERROR_MSG
+            );
+        }
 
-    private String generateToken(User user) {
-        log.info("---------- generateToken() ----------");
+        TokenReqDTO tokenReqDTO = new TokenReqDTO();
+        tokenReqDTO.setUserId(user.getUserId());
+        tokenReqDTO.setAccessToken(accessToken);
+        tokenReqDTO.setRefreshToken(refreshToken);
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("name", user.getName());
-        claims.put("email", user.getEmail());
+        int result = tokenService.persistTokenRecord(tokenReqDTO);
+        if (result <= 0) {
+            throw new TrackWizeException(
+                    ErrorConst.PERSIST_TOKEN_ERROR_CODE,
+                    ErrorConst.PERSIST_TOKEN_ERROR_MSG
+            );
+        }
 
-        return jwtUtil.generateToken(claims, user.getUserId(), "");
+        resDTO.setAccessToken(accessToken);
+        resDTO.setRefreshToken(refreshToken);
+        return resDTO;
     }
 
     private boolean validatePassword(AuthenticationReqDTO reqDTO, User user) {

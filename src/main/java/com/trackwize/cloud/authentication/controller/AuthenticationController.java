@@ -4,6 +4,7 @@ import com.trackwize.cloud.authentication.config.TokenSecurityConfig;
 import com.trackwize.cloud.authentication.constant.ErrorConst;
 import com.trackwize.cloud.authentication.exception.TrackWizeException;
 import com.trackwize.cloud.authentication.model.dto.AuthenticationReqDTO;
+import com.trackwize.cloud.authentication.model.dto.AuthenticationResDTO;
 import com.trackwize.cloud.authentication.model.dto.EncryptResDTO;
 import com.trackwize.cloud.authentication.service.AuthenticationService;
 import com.trackwize.cloud.authentication.util.CookieUtil;
@@ -55,20 +56,26 @@ public class AuthenticationController {
         log.info("---------- Authentication Request Received ----------");
 
         try {
-            String token = authenticationService.validateCredentials(reqDTO);
+            AuthenticationResDTO resDTO = authenticationService.validateCredentials(reqDTO);
             if (tokenSecurityConfig.isTokenCookieEnable()) {
-                Cookie tokenCookie = CookieUtil.createCookie(token, tokenSecurityConfig.isHttps());
+                Cookie tokenCookie = CookieUtil.createCookie(resDTO.getAccessToken(), tokenSecurityConfig.isHttps());
                 response.addCookie(tokenCookie);
                 CookieUtil.addSameSiteAttribute(response, "Lax");
             }
 
             log.info("---------- Authentication Request Success ----------");
             ResponseUtil responseUtil = ResponseUtil.success();
-            responseUtil.setData(token);
+            responseUtil.setData(resDTO);
             return responseUtil;
 
         } catch (TrackWizeException e) {
-            log.info("ExpensoException occur: ", e);
+            log.info("TrackWizeException occur: ", e);
+            return ResponseUtil.createErrorResponse(
+                    e.getMessageCode(),
+                    e.getMessage()
+            );
+        } catch (Exception e) {
+            log.info("Exception occur: ", e);
             return ResponseUtil.createErrorResponse(
                     ErrorConst.AUTHENTICATION_ERROR_CODE,
                     ErrorConst.AUTHENTICATION_ERROR_MSG
@@ -76,8 +83,10 @@ public class AuthenticationController {
         }
     }
 
+    //todo refresh api
 
     //todo logout api
+    // @PostMapping("logout")
 
 
     //todo forgot password api
