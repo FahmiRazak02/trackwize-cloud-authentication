@@ -31,4 +31,7 @@ public interface TokenMapper {
 
     @UpdateProvider(type = TokenProvider.class, method = "updateTokenRecord")
     int update(Token token);
+
+    @SelectProvider(type = TokenProvider.class, method = "findByUserId")
+    Token findByUserId(String userId);
 }

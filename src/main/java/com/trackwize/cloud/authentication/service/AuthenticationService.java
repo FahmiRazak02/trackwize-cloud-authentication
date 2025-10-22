@@ -6,6 +6,7 @@ import com.trackwize.cloud.authentication.mapper.UserMapper;
 import com.trackwize.cloud.authentication.model.dto.AuthenticationReqDTO;
 import com.trackwize.cloud.authentication.model.dto.AuthenticationResDTO;
 import com.trackwize.cloud.authentication.model.dto.TokenReqDTO;
+import com.trackwize.cloud.authentication.model.entity.Token;
 import com.trackwize.cloud.authentication.model.entity.User;
 import com.trackwize.cloud.authentication.util.EncryptUtil;
 import com.trackwize.cloud.authentication.util.JWTUtil;
@@ -30,8 +31,8 @@ public class AuthenticationService {
     private final UserMapper userMapper;
     private final JWTUtil jwtUtil;
 
-    public AuthenticationResDTO validateCredentials(AuthenticationReqDTO reqDTO) throws TrackWizeException {
-        log.info("---------- validateCredentials() ----------");
+    public AuthenticationResDTO authenticateAccess(AuthenticationReqDTO reqDTO) throws TrackWizeException {
+        log.info("---------- authenticateAccess() ----------");
         AuthenticationResDTO resDTO = new AuthenticationResDTO();
 
         User user = userMapper.findByEmail(reqDTO.getEmail());
@@ -90,5 +91,45 @@ public class AuthenticationService {
 
         String encryptedPassword = EncryptUtil.decrypt(reqDTO.getEncryptedPassword(), reqDTO.getKey());
         return PasswordUtil.isPasswordMatch(encryptedPassword, user.getPassword());
+    }
+
+    public boolean verifyRefreshToken(String userId, String refreshToken) {
+        log.info("---------- verifyRefreshToken() ----------");
+        boolean result = false;
+
+        String tokenUserId = jwtUtil.getSubject(refreshToken);
+        if (!tokenUserId.equals(userId)) {
+            log.info("UserId from token does not match the provided userId");
+            return false;
+        }
+
+        Token token = tokenService.findByUserId(userId);
+        if (!token.getRefreshToken().equals(refreshToken)) {
+            log.info("Refresh token does not match the stored token");
+            return false;
+        }
+
+        boolean isValid = jwtUtil.validateToken(refreshToken);
+        if (!isValid) {
+            log.info("Refresh token is not valid or has expired");
+            return false;
+        }
+
+        return true;
+    }
+
+    public String generateNewAccessToken(String userId) throws TrackWizeException {
+        log.info("---------- generateNewAccessToken() ----------");
+        User user = userMapper.findById(userId);
+
+        String token = tokenService.generateToken(user, defaultAccessTokenTimeout);
+        if (token.isEmpty()) {
+            throw new TrackWizeException(
+                    ErrorConst.GENERATE_TOKEN_ERROR_CODE,
+                    ErrorConst.GENERATE_TOKEN_ERROR_MSG
+            );
+        }
+
+        return token;
     }
 }

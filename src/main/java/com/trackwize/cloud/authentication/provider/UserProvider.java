@@ -23,4 +23,13 @@ public class UserProvider {
                 .WHERE("status = " + DBConst.STATUS_ACTIVE)
                 .toString();
     }
+
+    public String findById(String userId) {
+        return new SQL()
+                .SELECT("*")
+                .FROM(DBConst.USER_TABLE)
+                .WHERE("user_id = #{userId}")
+                .WHERE("status = " + DBConst.STATUS_ACTIVE)
+                .toString();
+    }
 }

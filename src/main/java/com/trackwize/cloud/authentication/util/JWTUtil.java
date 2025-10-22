@@ -66,4 +66,9 @@ public class JWTUtil {
         Object value = claims.get(key);
         return value != null ? value.toString() : null;
     }
+
+    public String getSubject(String token) {
+        Claims claims = extractClaims(token);
+        return claims.getSubject();
+    }
 }

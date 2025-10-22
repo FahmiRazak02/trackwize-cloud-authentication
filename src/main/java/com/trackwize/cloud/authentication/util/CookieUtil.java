@@ -1,5 +1,6 @@
 package com.trackwize.cloud.authentication.util;
 
+import com.trackwize.cloud.authentication.constant.TokenConst;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
@@ -8,19 +9,15 @@ import java.util.Collection;
 
 public class CookieUtil {
 
-    private static final String TOKEN_NAME = "auth_token";
-    private static final int TOKEN_EXPIRY = 60 * 60; // 1 hour
-    private static final String TOKEN_PATH = "/";
-
     /**
      * Creates an HttpOnly cookie.
      */
-    public static Cookie createCookie(String token, boolean secure) {
-        Cookie cookie = new Cookie(TOKEN_NAME, token);
+    public static Cookie createCookie(String token, boolean secure, String name, int cookieTimeout) {
+        Cookie cookie = new Cookie(name, token);
         cookie.setHttpOnly(true);
         cookie.setSecure(secure);
-        cookie.setMaxAge(TOKEN_EXPIRY);
-        cookie.setPath(TOKEN_PATH);
+        cookie.setMaxAge(TokenConst.BASE_TOKEN_EXPIRY * cookieTimeout);
+        cookie.setPath(TokenConst.TOKEN_PATH);
         return cookie;
     }
 

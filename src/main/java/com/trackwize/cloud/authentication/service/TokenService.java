@@ -52,4 +52,9 @@ public class TokenService {
         //todo
         return false;
     }
+
+    public Token findByUserId(String userId) {
+        log.info("---------- findByUserId() ----------");
+        return tokenMapper.findByUserId(userId);
+    }
 }

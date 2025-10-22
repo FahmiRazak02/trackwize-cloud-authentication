@@ -23,7 +23,7 @@ public class ErrorConst {
     public static final String NO_RECORD_FOUND_MSG = "No Record found.";
 
     public static final String MISSING_REQUIRED_INPUT_CODE = "10007";
-    public static final String MISSING_REQUIRED_INPUT_MSG = "Missing required input: ";
+    public static final String MISSING_REQUIRED_INPUT_MSG = "Missing required input";
 
 
 //    AUTHENTICATION ERROR CODE - 20001 to 29999
@@ -57,4 +57,10 @@ public class ErrorConst {
 
     public static final String USER_ALREADY_LOGGED_IN_CODE = "20010";
     public static final String USER_ALREADY_LOGGED_IN_MSG = "User is already logged in. Please log out before logging in again.";
+
+    public static final String MISSING_REFRESH_TOKEN_CODE = "20011";
+    public static final String MISSING_REFRESH_TOKEN_MSG = "Missing refresh token";
+
+    public static final String INVALID_REFRESH_TOKEN_CODE = "20012";
+    public static final String INVALID_REFRESH_TOKEN_MSG = "Refresh token is invalid";
 }

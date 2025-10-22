@@ -43,4 +43,13 @@ public class TokenProvider {
                 .SET("updated_date = NOW()")
                 .toString();
     }
+
+    public String findByUserId(String userId) {
+        return new SQL()
+                .SELECT("*")
+                .FROM(DBConst.TOKEN_TABLE)
+                .WHERE("user_id = #{userId}")
+                .WHERE("status = " + DBConst.STATUS_ACTIVE)
+                .toString();
+    }
 }

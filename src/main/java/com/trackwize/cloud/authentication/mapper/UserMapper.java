@@ -27,4 +27,8 @@ public interface UserMapper {
     @SelectProvider(type = UserProvider.class, method = "findByEmail")
     @ResultMap("userMap")
     User findByEmail(String email);
+
+    @SelectProvider(type = UserProvider.class, method = "findById")
+    @ResultMap("userMap")
+    User findById(String userId);
 }
