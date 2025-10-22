@@ -97,6 +97,7 @@ public class AuthenticationController {
     }
 
     //todo refresh api
+    @PostMapping("/refresh")
     public ResponseUtil refreshToken (
             @ModelAttribute("trackingId") String trackingId,
             @ModelAttribute("userId") String userId,
@@ -122,6 +123,7 @@ public class AuthenticationController {
             }
 
             String token = authenticationService.generateNewAccessToken(userId);
+            log.info("token: {}", token);
             if (tokenSecurityConfig.isTokenCookieEnable()) {
                 Cookie accessCookie = CookieUtil.createCookie(
                         token,
@@ -136,7 +138,7 @@ public class AuthenticationController {
             resUtil = ResponseUtil.success();
             resUtil.setData(token);
             log.info("---------- Token Refresh Success ----------");
-            return ResponseUtil.success();
+            return resUtil;
 
         } catch (TrackWizeException e) {
             log.info("TrackWizeException occur: ", e);

@@ -33,5 +33,6 @@ public interface TokenMapper {
     int update(Token token);
 
     @SelectProvider(type = TokenProvider.class, method = "findByUserId")
+    @ResultMap("tokenMap")
     Token findByUserId(String userId);
 }
