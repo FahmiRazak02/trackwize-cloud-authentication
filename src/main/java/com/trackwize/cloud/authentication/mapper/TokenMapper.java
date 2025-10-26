@@ -34,5 +34,5 @@ public interface TokenMapper {
 
     @SelectProvider(type = TokenProvider.class, method = "findByUserId")
     @ResultMap("tokenMap")
-    Token findByUserId(String userId);
+    Token findByUserId(Long userId);
 }

@@ -24,7 +24,7 @@ public class UserProvider {
                 .toString();
     }
 
-    public String findById(String userId) {
+    public String findById(Long userId) {
         return new SQL()
                 .SELECT("*")
                 .FROM(DBConst.USER_TABLE)

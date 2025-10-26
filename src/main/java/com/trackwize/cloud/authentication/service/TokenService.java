@@ -47,13 +47,23 @@ public class TokenService {
 
     }
 
-    public boolean hasActiveSession(User user) {
-        log.info("---------- hasActiveSession() ----------");
-        //todo
-        return false;
+    public boolean isActiveSession(User user) {
+        log.info("---------- isActiveSession() ----------");
+
+        Token token = tokenMapper.findByUserId(user.getUserId());
+        String accessToken = token.getAccessToken();
+        if (accessToken.isEmpty()) {
+            return false;
+        }
+
+        if (!jwtUtil.validateToken(accessToken)) {
+            return false;
+        }
+
+        return true;
     }
 
-    public Token findByUserId(String userId) {
+    public Token findByUserId(Long userId) {
         log.info("---------- findByUserId() ----------");
         return tokenMapper.findByUserId(userId);
     }

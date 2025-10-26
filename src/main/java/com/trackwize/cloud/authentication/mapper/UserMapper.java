@@ -30,5 +30,5 @@ public interface UserMapper {
 
     @SelectProvider(type = UserProvider.class, method = "findById")
     @ResultMap("userMap")
-    User findById(String userId);
+    User findById(Long userId);
 }

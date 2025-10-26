@@ -44,7 +44,7 @@ public class TokenProvider {
                 .toString();
     }
 
-    public String findByUserId(String userId) {
+    public String findByUserId(Long userId) {
         return new SQL()
                 .SELECT("*")
                 .FROM(DBConst.TOKEN_TABLE)

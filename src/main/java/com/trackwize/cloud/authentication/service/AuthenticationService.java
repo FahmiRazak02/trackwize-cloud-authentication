@@ -51,7 +51,7 @@ public class AuthenticationService {
             );
         }
 
-        boolean isActive = tokenService.hasActiveSession(user);
+        boolean isActive = tokenService.isActiveSession(user);
         if (isActive) {
             throw new TrackWizeException(
                     ErrorConst.USER_ALREADY_LOGGED_IN_CODE,
@@ -93,11 +93,11 @@ public class AuthenticationService {
         return PasswordUtil.isPasswordMatch(encryptedPassword, user.getPassword());
     }
 
-    public boolean verifyRefreshToken(String userId, String refreshToken) {
+    public boolean verifyRefreshToken(Long userId, String refreshToken) {
         log.info("---------- verifyRefreshToken() ----------");
         boolean result = false;
 
-        String tokenUserId = jwtUtil.getSubject(refreshToken);
+        Long tokenUserId = jwtUtil.getSubject(refreshToken);
         if (!tokenUserId.equals(userId)) {
             log.info("UserId from token does not match the provided userId");
             return false;
@@ -118,7 +118,7 @@ public class AuthenticationService {
         return true;
     }
 
-    public String generateNewAccessToken(String userId) throws TrackWizeException {
+    public String generateNewAccessToken(Long userId) throws TrackWizeException {
         log.info("---------- generateNewAccessToken() ----------");
         User user = userMapper.findById(userId);
 

@@ -25,6 +25,9 @@ public class ErrorConst {
     public static final String MISSING_REQUIRED_INPUT_CODE = "10007";
     public static final String MISSING_REQUIRED_INPUT_MSG = "Missing required input";
 
+    public static final String SQL_EXCEPTION_CODE = "10008";
+    public static final String SQL_EXCEPTION_MSG = "SQL Exception has occur, please try again.";
+
 
 //    AUTHENTICATION ERROR CODE - 20001 to 29999
 
@@ -63,4 +66,5 @@ public class ErrorConst {
 
     public static final String INVALID_REFRESH_TOKEN_CODE = "20012";
     public static final String INVALID_REFRESH_TOKEN_MSG = "Refresh token is invalid";
+
 }

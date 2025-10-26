@@ -28,8 +28,6 @@ public class AuthenticationController {
 
     @PostMapping("/encrypt/{password}")
     public ResponseUtil encryptPassword(
-            @ModelAttribute("trackingId") String trackingId,
-            @ModelAttribute("userId") String userId,
             @PathVariable String password
     ){
         log.info("---------- Password Encryption Request Received ----------");
@@ -49,110 +47,80 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseUtil login(
             @ModelAttribute("trackingId") String trackingId,
-            @ModelAttribute("userId") String userId,
             @RequestBody AuthenticationReqDTO reqDTO,
             HttpServletResponse response
-    ) {
+    ) throws TrackWizeException {
+
         ResponseUtil resUtil = ResponseUtil.failure();
         log.info("---------- Authentication Request Received ----------");
 
-        try {
-            AuthenticationResDTO resDTO = authenticationService.authenticateAccess(reqDTO);
-            if (tokenSecurityConfig.isTokenCookieEnable()) {
-                Cookie accessCookie = CookieUtil.createCookie(
-                        resDTO.getAccessToken(),
-                        tokenSecurityConfig.isHttps(),
-                        TokenConst.ACCESS_TOKEN_NAME,
-                        TokenConst.ACCESS_TOKEN_EXPIRY
-                );
-                Cookie refreshCookie = CookieUtil.createCookie(
-                        resDTO.getRefreshToken(),
-                        tokenSecurityConfig.isHttps(),
-                        TokenConst.REFRESH_TOKEN_NAME,
-                        TokenConst.REFRESH_TOKEN_EXPIRY
-                );
-                response.addCookie(accessCookie);
-                response.addCookie(refreshCookie);
-                CookieUtil.addSameSiteAttribute(response, "Lax");
-            }
-
-            log.info("---------- Authentication Request Success ----------");
-            ResponseUtil responseUtil = ResponseUtil.success();
-            responseUtil.setData(resDTO);
-            return responseUtil;
-
-        } catch (TrackWizeException e) {
-            log.info("TrackWizeException occur: ", e);
-            return ResponseUtil.createErrorResponse(
-                    e.getMessageCode(),
-                    e.getMessage()
+        AuthenticationResDTO resDTO = authenticationService.authenticateAccess(reqDTO);
+        if (tokenSecurityConfig.isTokenCookieEnable()) {
+            Cookie accessCookie = CookieUtil.createCookie(
+                    resDTO.getAccessToken(),
+                    tokenSecurityConfig.isHttps(),
+                    TokenConst.ACCESS_TOKEN_NAME,
+                    TokenConst.ACCESS_TOKEN_EXPIRY
             );
-        } catch (Exception e) {
-            log.info("Exception occur: ", e);
-            return ResponseUtil.createErrorResponse(
-                    ErrorConst.AUTHENTICATION_ERROR_CODE,
-                    ErrorConst.AUTHENTICATION_ERROR_MSG
+            Cookie refreshCookie = CookieUtil.createCookie(
+                    resDTO.getRefreshToken(),
+                    tokenSecurityConfig.isHttps(),
+                    TokenConst.REFRESH_TOKEN_NAME,
+                    TokenConst.REFRESH_TOKEN_EXPIRY
             );
+            response.addCookie(accessCookie);
+            response.addCookie(refreshCookie);
+            CookieUtil.addSameSiteAttribute(response, "Lax");
         }
+
+        log.info("---------- User Authenticated ----------");
+        ResponseUtil responseUtil = ResponseUtil.success();
+        responseUtil.setData(resDTO);
+        return responseUtil;
     }
 
-    //todo refresh api
     @PostMapping("/refresh")
     public ResponseUtil refreshToken (
             @ModelAttribute("trackingId") String trackingId,
             @ModelAttribute("userId") String userId,
             @CookieValue(name = TokenConst.REFRESH_TOKEN_NAME, required = false) String refreshToken,
             HttpServletResponse response
-    ) {
+    ) throws TrackWizeException {
+
         log.info("---------- Token Refresh Request Received ----------");
+        Long userIdL = Long.parseLong(userId);
         ResponseUtil resUtil = ResponseUtil.failure();
-        try {
-            if (refreshToken == null) {
-                throw new TrackWizeException(
-                        ErrorConst.MISSING_REFRESH_TOKEN_CODE,
-                        ErrorConst.MISSING_REFRESH_TOKEN_MSG
-                );
-            }
-
-            boolean isValid = authenticationService.verifyRefreshToken(userId, refreshToken);
-            if (!isValid) {
-                throw new TrackWizeException(
-                        ErrorConst.INVALID_REFRESH_TOKEN_CODE,
-                        ErrorConst.INVALID_REFRESH_TOKEN_MSG
-                );
-            }
-
-            String token = authenticationService.generateNewAccessToken(userId);
-            log.info("token: {}", token);
-            if (tokenSecurityConfig.isTokenCookieEnable()) {
-                Cookie accessCookie = CookieUtil.createCookie(
-                        token,
-                        tokenSecurityConfig.isHttps(),
-                        TokenConst.ACCESS_TOKEN_NAME,
-                        TokenConst.ACCESS_TOKEN_EXPIRY
-                );
-                response.addCookie(accessCookie);
-                CookieUtil.addSameSiteAttribute(response, "Lax");
-            }
-
-            resUtil = ResponseUtil.success();
-            resUtil.setData(token);
-            log.info("---------- Token Refresh Success ----------");
-            return resUtil;
-
-        } catch (TrackWizeException e) {
-            log.info("TrackWizeException occur: ", e);
-            return ResponseUtil.createErrorResponse(
-                    e.getMessageCode(),
-                    e.getMessage()
-            );
-        } catch (Exception e) {
-            log.info("Exception occur: ", e);
-            return ResponseUtil.createErrorResponse(
-                    ErrorConst.AUTHENTICATION_ERROR_CODE,
-                    ErrorConst.AUTHENTICATION_ERROR_MSG
+        if (refreshToken == null) {
+            throw new TrackWizeException(
+                    ErrorConst.MISSING_REFRESH_TOKEN_CODE,
+                    ErrorConst.MISSING_REFRESH_TOKEN_MSG
             );
         }
+
+        boolean isValid = authenticationService.verifyRefreshToken(userIdL, refreshToken);
+        if (!isValid) {
+            throw new TrackWizeException(
+                    ErrorConst.INVALID_REFRESH_TOKEN_CODE,
+                    ErrorConst.INVALID_REFRESH_TOKEN_MSG
+            );
+        }
+
+        String token = authenticationService.generateNewAccessToken(userIdL);
+        if (tokenSecurityConfig.isTokenCookieEnable()) {
+            Cookie accessCookie = CookieUtil.createCookie(
+                    token,
+                    tokenSecurityConfig.isHttps(),
+                    TokenConst.ACCESS_TOKEN_NAME,
+                    TokenConst.ACCESS_TOKEN_EXPIRY
+            );
+            response.addCookie(accessCookie);
+            CookieUtil.addSameSiteAttribute(response, "Lax");
+        }
+
+        resUtil = ResponseUtil.success();
+        resUtil.setData(token);
+        log.info("---------- Token Refreshed ----------");
+        return resUtil;
     }
 
     //todo logout api
