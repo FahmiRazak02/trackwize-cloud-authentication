@@ -35,4 +35,11 @@ public interface TokenMapper {
     @SelectProvider(type = TokenProvider.class, method = "findByUserId")
     @ResultMap("tokenMap")
     Token findByUserId(Long userId);
+
+    @SelectProvider(type = TokenProvider.class, method = "validateRefreshToken")
+    @ResultMap("tokenMap")
+    Token validateToken(String refreshToken);
+
+    @DeleteProvider(type = TokenProvider.class, method = "deleteById")
+    void deleteById(Long tokenId);
 }

@@ -67,4 +67,11 @@ public class TokenService {
         log.info("---------- findByUserId() ----------");
         return tokenMapper.findByUserId(userId);
     }
+
+    public void logout(String refreshToken) {
+        Token token = tokenMapper.validateToken(refreshToken);
+        if (token != null) {
+            tokenMapper.deleteById(token.getTokenId());
+        }
+    }
 }

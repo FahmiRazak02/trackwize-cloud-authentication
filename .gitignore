@@ -35,6 +35,7 @@ build/
 
 # Ignore Docker database data
 mysql_data/
+redis_data/
 *.sock
 
 # Ignore IDE and system files

@@ -52,4 +52,20 @@ public class TokenProvider {
                 .WHERE("status = " + DBConst.STATUS_ACTIVE)
                 .toString();
     }
+
+    public String validateRefreshToken(String refreshToken) {
+        return new SQL()
+                .SELECT("*")
+                .FROM(DBConst.TOKEN_TABLE)
+                .WHERE("refresh_token = #{refreshToken}")
+                .WHERE("status = " + DBConst.STATUS_ACTIVE)
+                .toString();
+    }
+
+    public String deleteById(Long tokenId) {
+        return new SQL()
+                .DELETE_FROM(DBConst.TOKEN_TABLE)
+                .WHERE("token_id = #{tokenId}")
+                .toString();
+    }
 }

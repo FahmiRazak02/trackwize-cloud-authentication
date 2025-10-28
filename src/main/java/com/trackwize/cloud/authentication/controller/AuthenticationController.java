@@ -8,6 +8,7 @@ import com.trackwize.cloud.authentication.model.dto.AuthenticationReqDTO;
 import com.trackwize.cloud.authentication.model.dto.AuthenticationResDTO;
 import com.trackwize.cloud.authentication.model.dto.EncryptResDTO;
 import com.trackwize.cloud.authentication.service.AuthenticationService;
+import com.trackwize.cloud.authentication.service.TokenService;
 import com.trackwize.cloud.authentication.util.CookieUtil;
 import com.trackwize.cloud.authentication.util.EncryptUtil;
 import com.trackwize.cloud.authentication.util.ResponseUtil;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+    private final TokenService tokenService;
     private final TokenSecurityConfig tokenSecurityConfig;
 
     @PostMapping("/encrypt/{password}")
@@ -123,8 +125,37 @@ public class AuthenticationController {
         return resUtil;
     }
 
-    //todo logout api
-    // @PostMapping("logout")
+    @PostMapping("logout")
+    public ResponseUtil logout(
+            @CookieValue(name = TokenConst.REFRESH_TOKEN_NAME, required = false) String refreshToken,
+            HttpServletResponse response
+    ) throws TrackWizeException {
+        log.info("---------- Logout Request ----------");
+        ResponseUtil responseUtil = ResponseUtil.success();
+        if (refreshToken == null) {
+            throw new TrackWizeException(
+                    ErrorConst.MISSING_REFRESH_TOKEN_CODE,
+                    ErrorConst.MISSING_REFRESH_TOKEN_MSG
+            );
+        }
+
+        if (tokenSecurityConfig.isTokenCookieEnable()) {
+            Cookie accessCookie = CookieUtil.removeTokenFromCookie(
+                    tokenSecurityConfig.isHttps(),
+                    TokenConst.ACCESS_TOKEN_NAME
+            );
+            Cookie refreshCookie = CookieUtil.removeTokenFromCookie(
+                    tokenSecurityConfig.isHttps(),
+                    TokenConst.REFRESH_TOKEN_NAME
+            );
+            response.addCookie(accessCookie);
+            response.addCookie(refreshCookie);
+        }
+
+        tokenService.logout(refreshToken);
+
+        return responseUtil;
+    }
 
 
     //todo forgot password api

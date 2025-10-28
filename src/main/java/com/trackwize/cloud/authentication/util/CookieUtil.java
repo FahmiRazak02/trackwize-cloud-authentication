@@ -21,6 +21,17 @@ public class CookieUtil {
         return cookie;
     }
 
+    public static Cookie removeTokenFromCookie(boolean isSecure, String name) {
+        Cookie cookie = new Cookie(name, null);
+        cookie.setMaxAge(0);
+        cookie.setPath(TokenConst.TOKEN_PATH);
+        if (isSecure) {
+            cookie.setSecure(true);
+        }
+        cookie.setHttpOnly(true);
+        return cookie;
+    }
+
     /**
      * Adds the SameSite attribute to cookies in the response.
      */
