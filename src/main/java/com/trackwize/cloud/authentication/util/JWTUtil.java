@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,11 +28,11 @@ public class JWTUtil {
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(Map<String, Object> claims, String subject, String accessTokenTimeout) {
+    public String generateToken(Map<String, Object> claims, String subject, int accessTokenTimeout) {
 
-        long expirationMillis = Integer.parseInt(accessTokenTimeout) * 1000L;
+        long expirationMillis = accessTokenTimeout * 1000L;
         return Jwts.builder()
-                .setClaims(claims)
+                .setClaims(claims != null ? claims : new HashMap<>())
                 .setSubject(subject)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))

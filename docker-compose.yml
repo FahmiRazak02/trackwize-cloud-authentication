@@ -12,6 +12,18 @@ services:
       - ./mysql_data:/var/lib/mysql         # Persistent database data
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: trackwize-redis
+    ports:
+      - "6379:6379"
+    command: [ "redis-server", "--appendonly", "yes" ]
+    volumes:
+      - ./redis_data:/data
+    restart: unless-stopped
+
 volumes:
   mysql_data:
+    driver: local
+  redis_data:
     driver: local

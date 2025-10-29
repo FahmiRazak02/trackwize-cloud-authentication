@@ -12,6 +12,7 @@ import com.trackwize.cloud.authentication.service.TokenService;
 import com.trackwize.cloud.authentication.util.CookieUtil;
 import com.trackwize.cloud.authentication.util.EncryptUtil;
 import com.trackwize.cloud.authentication.util.ResponseUtil;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -157,7 +158,17 @@ public class AuthenticationController {
         return responseUtil;
     }
 
+    @PostMapping("password-reset/request")
+    public ResponseUtil requestPasswordReset(
+            @RequestParam String email
+    ) throws TrackWizeException, MessagingException {
+        log.info("---------- Password Reset Request ----------");
+        ResponseUtil responseUtil = ResponseUtil.success();
 
-    //todo forgot password api
+        String token = tokenService.generatePasswordResetToken(email);
+
+        responseUtil.setData(token);
+        return responseUtil;
+    }
 
 }

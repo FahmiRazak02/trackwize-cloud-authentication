@@ -22,10 +22,10 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     @Value("${jwt.defaultAccessTokenTimeout}")
-    private String defaultAccessTokenTimeout;
+    private int defaultAccessTokenTimeout;
 
     @Value("${jwt.defaultRefreshTokenTimeout}")
-    private String defaultRefreshTokenTimeout;
+    private int defaultRefreshTokenTimeout;
 
     private final TokenService tokenService;
     private final UserMapper userMapper;

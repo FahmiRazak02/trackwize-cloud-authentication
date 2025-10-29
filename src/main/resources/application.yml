@@ -20,3 +20,9 @@ jwt:
   secret: xY75xfcUBuUt2fqB0pK/3194y319IJN==SIbASFi4as35SD=
   defaultAccessTokenTimeout: 1800          #15minit
   defaultRefreshTokenTimeout: 2592000    #30 days
+
+smtp:
+  host: smtp.gmail.com
+  port: 587
+  username: email
+  password: app-password
