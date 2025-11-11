@@ -1,5 +1,6 @@
 package com.trackwize.cloud.authentication.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trackwize.cloud.authentication.config.TokenSecurityConfig;
 import com.trackwize.cloud.authentication.constant.ErrorConst;
 import com.trackwize.cloud.authentication.constant.TokenConst;
@@ -33,7 +34,8 @@ public class AuthenticationController {
     public ResponseUtil encryptPassword(
             @PathVariable String password
     ){
-        log.info("---------- Password Encryption Request Received ----------");
+        log.info("Request Payload [Password]: {}", password);
+
         String key = EncryptUtil.generateRandomKey(4);
         String encrytedPassword = EncryptUtil.encrypt(password, key);
 
@@ -41,7 +43,6 @@ public class AuthenticationController {
         resDTO.setKey(key);
         resDTO.setEncryptedPassword(encrytedPassword);
 
-        log.info("---------- Password Encryption Request Success ----------");
         ResponseUtil responseUtil = ResponseUtil.success();
         responseUtil.setData(resDTO);
         return responseUtil;
@@ -53,9 +54,8 @@ public class AuthenticationController {
             @RequestBody AuthenticationReqDTO reqDTO,
             HttpServletResponse response
     ) throws TrackWizeException {
-
         ResponseUtil resUtil = ResponseUtil.failure();
-        log.info("---------- Authentication Request Received ----------");
+        log.info("Request Payload [AuthenticationReqDTO]: {}", reqDTO);
 
         AuthenticationResDTO resDTO = authenticationService.authenticateAccess(reqDTO);
         if (tokenSecurityConfig.isTokenCookieEnable()) {
@@ -76,7 +76,6 @@ public class AuthenticationController {
             CookieUtil.addSameSiteAttribute(response, "Lax");
         }
 
-        log.info("---------- User Authenticated ----------");
         ResponseUtil responseUtil = ResponseUtil.success();
         responseUtil.setData(resDTO);
         return responseUtil;
@@ -89,10 +88,9 @@ public class AuthenticationController {
             @CookieValue(name = TokenConst.REFRESH_TOKEN_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) throws TrackWizeException {
-
-        log.info("---------- Token Refresh Request Received ----------");
+        ResponseUtil resUtil = ResponseUtil.success();
         Long userIdL = Long.parseLong(userId);
-        ResponseUtil resUtil = ResponseUtil.failure();
+
         if (refreshToken == null) {
             throw new TrackWizeException(
                     ErrorConst.MISSING_REFRESH_TOKEN_CODE,
@@ -120,18 +118,16 @@ public class AuthenticationController {
             CookieUtil.addSameSiteAttribute(response, "Lax");
         }
 
-        resUtil = ResponseUtil.success();
         resUtil.setData(token);
-        log.info("---------- Token Refreshed ----------");
         return resUtil;
     }
 
     @PostMapping("logout")
     public ResponseUtil logout(
+            @ModelAttribute("trackingId") String trackingId,
             @CookieValue(name = TokenConst.REFRESH_TOKEN_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) throws TrackWizeException {
-        log.info("---------- Logout Request ----------");
         ResponseUtil responseUtil = ResponseUtil.success();
         if (refreshToken == null) {
             throw new TrackWizeException(
@@ -154,18 +150,18 @@ public class AuthenticationController {
         }
 
         tokenService.logout(refreshToken);
-
         return responseUtil;
     }
 
     @PostMapping("password-reset/request")
     public ResponseUtil requestPasswordReset(
+            @ModelAttribute("trackingId") String trackingId,
             @RequestParam String email
-    ) throws TrackWizeException, MessagingException {
-        log.info("---------- Password Reset Request ----------");
+    ) throws TrackWizeException, MessagingException, JsonProcessingException {
+        log.info("Request Payload [Email]: {}", email);
         ResponseUtil responseUtil = ResponseUtil.success();
 
-        String token = tokenService.generatePasswordResetToken(email);
+        String token = tokenService.generatePasswordResetToken(email, trackingId);
 
         responseUtil.setData(token);
         return responseUtil;

@@ -38,6 +38,7 @@ public class LoggingFilter extends OncePerRequestFilter {
         String trackingId = request.getHeader(TRACKING_ID);
         if (trackingId == null || trackingId.isBlank()) {
             trackingId = UUID.randomUUID().toString();
+            request.setAttribute(TRACKING_ID, trackingId);
             log.debug("Generated tracking ID: {}", trackingId);
         }
 
@@ -59,8 +60,8 @@ public class LoggingFilter extends OncePerRequestFilter {
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
         try {
-            log.info("[{}] Incoming request: method={}, URI={}, userId={}",
-                    trackingId,
+            log.info("\n");
+            log.info("Incoming request: method={}, URI={}, userId={}",
                     wrappedRequest.getMethod(),
                     wrappedRequest.getRequestURI(),
                     userId != null ? userId : "anonymous");

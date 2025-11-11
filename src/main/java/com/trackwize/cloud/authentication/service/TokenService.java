@@ -1,11 +1,13 @@
 package com.trackwize.cloud.authentication.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trackwize.cloud.authentication.constant.ErrorConst;
+import com.trackwize.cloud.authentication.constant.NotificationConst;
 import com.trackwize.cloud.authentication.constant.TokenConst;
 import com.trackwize.cloud.authentication.exception.TrackWizeException;
 import com.trackwize.cloud.authentication.mapper.TokenMapper;
 import com.trackwize.cloud.authentication.mapstruct.TokenMapStruct;
-import com.trackwize.cloud.authentication.model.dto.EmailReqDTO;
+import com.trackwize.cloud.authentication.model.dto.NotificationReqDTO;
 import com.trackwize.cloud.authentication.model.dto.TokenReqDTO;
 import com.trackwize.cloud.authentication.model.entity.Token;
 import com.trackwize.cloud.authentication.model.entity.User;
@@ -32,8 +34,6 @@ public class TokenService {
     private final RedisTemplate<String, String> redisTemplate;
 
     public String generateToken(User user, int accessTokenTimeout) {
-        log.info("---------- generateToken() ----------");
-
         Map<String, Object> claims = new HashMap<>();
         claims.put("name", user.getName());
         claims.put("email", user.getEmail());
@@ -42,7 +42,6 @@ public class TokenService {
     }
 
     public int persistTokenRecord(TokenReqDTO tokenReqDTO) {
-        log.info("---------- persistTokenRecord() ----------");
         Token token = tokenMapStruct.toEntity(tokenReqDTO);
 
         boolean isTokenExist = tokenMapper.isExist(token.getUserId());
@@ -57,8 +56,6 @@ public class TokenService {
     }
 
     public boolean isActiveSession(User user) {
-        log.info("---------- isActiveSession() ----------");
-
         Token token = tokenMapper.findByUserId(user.getUserId());
         String accessToken = token.getAccessToken();
         if (accessToken.isEmpty()) {
@@ -80,9 +77,7 @@ public class TokenService {
         }
     }
 
-    public String generatePasswordResetToken(String email) throws TrackWizeException, MessagingException {
-        log.info("---------- generatePasswordResetToken() ----------");
-
+    public String generatePasswordResetToken(String email, String trackingId) throws TrackWizeException, MessagingException, JsonProcessingException {
         String token = jwtUtil.generateToken(null, email, TokenConst.RESET_PASSWORD_TOKEN_EXPIRY);
         if (token == null) {
             throw new TrackWizeException(
@@ -92,21 +87,24 @@ public class TokenService {
         }
         redisTemplate.opsForValue().set(token, email, TokenConst.RESET_PASSWORD_TOKEN_EXPIRY, TimeUnit.MINUTES);
 
-        EmailReqDTO reqDTO = getEmailReqDTO(email, token);
-        emailService.sendEmail(reqDTO);
+        NotificationReqDTO reqDTO = getEmailReqDTO(email, token);
+        reqDTO.setTrackingId(trackingId);
 
+        emailService.sendEmail(reqDTO);
         return token;
     }
 
-    private static EmailReqDTO getEmailReqDTO(String email, String token) {
-        EmailReqDTO reqDTO = new EmailReqDTO();
+    private static NotificationReqDTO getEmailReqDTO(String email, String token) {
+        NotificationReqDTO reqDTO = new NotificationReqDTO();
+        reqDTO.setNotificationType(NotificationConst.EMAIL_NTF_TYPE);
+        reqDTO.setTemplate(NotificationConst.PASSWORD_RESET_TEMPLATE);
         reqDTO.setRecipient(email);
         reqDTO.setSubject("Password Reset for TrackWize");
 
         Map<String, Object> contents = new HashMap<>();
         contents.put("title", "Password Reset Request");
         contents.put("message", "Click the link below to reset your password:");
-        contents.put("link", "http://localhost:8080/auth/reset-password?token=" + token);
+        contents.put("token", token);
         contents.put("expiry", TokenConst.RESET_PASSWORD_TOKEN_EXPIRY);
 
         reqDTO.setContents(contents);

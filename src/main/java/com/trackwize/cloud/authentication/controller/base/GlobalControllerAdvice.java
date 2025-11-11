@@ -10,7 +10,12 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("trackingId")
     public String trackingId(HttpServletRequest request) {
-        return request.getHeader("X-Tracking-ID");
+        String header = request.getHeader("X-Tracking-ID");
+        if (header == null) {
+            Object attr = request.getAttribute("X-Tracking-ID");
+            return attr != null ? attr.toString() : null;
+        }
+        return header;
     }
 
     @ModelAttribute("userId")

@@ -32,7 +32,6 @@ public class AuthenticationService {
     private final JWTUtil jwtUtil;
 
     public AuthenticationResDTO authenticateAccess(AuthenticationReqDTO reqDTO) throws TrackWizeException {
-        log.info("---------- authenticateAccess() ----------");
         AuthenticationResDTO resDTO = new AuthenticationResDTO();
 
         User user = userMapper.findByEmail(reqDTO.getEmail());
@@ -87,14 +86,12 @@ public class AuthenticationService {
     }
 
     private boolean validatePassword(AuthenticationReqDTO reqDTO, User user) {
-        log.info("---------- validatePassword() ----------");
 
         String encryptedPassword = EncryptUtil.decrypt(reqDTO.getEncryptedPassword(), reqDTO.getKey());
         return PasswordUtil.isPasswordMatch(encryptedPassword, user.getPassword());
     }
 
     public boolean verifyRefreshToken(Long userId, String refreshToken) {
-        log.info("---------- verifyRefreshToken() ----------");
         boolean result = false;
 
         Long tokenUserId = jwtUtil.getSubject(refreshToken);
@@ -119,7 +116,6 @@ public class AuthenticationService {
     }
 
     public String generateNewAccessToken(Long userId) throws TrackWizeException {
-        log.info("---------- generateNewAccessToken() ----------");
         User user = userMapper.findById(userId);
 
         String token = tokenService.generateToken(user, defaultAccessTokenTimeout);

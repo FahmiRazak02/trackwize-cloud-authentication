@@ -9,8 +9,12 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmailReqDTO {
+public class NotificationReqDTO {
 
+    private String trackingId;
+
+    private char notificationType;
+    private int template;
     private String recipient;
     private String subject;
     private Map<String, Object> contents;
