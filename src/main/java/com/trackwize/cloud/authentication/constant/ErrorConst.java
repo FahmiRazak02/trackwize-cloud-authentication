@@ -67,4 +67,7 @@ public class ErrorConst {
     public static final String INVALID_REFRESH_TOKEN_CODE = "20012";
     public static final String INVALID_REFRESH_TOKEN_MSG = "Refresh token is invalid";
 
+    public static final String UPDATE_PASSWORD_FAILED_CODE = "20013";
+    public static final String UPDATE_PASSWORD_FAILED_MSG = "Failed to update user password.";
+
 }

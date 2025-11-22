@@ -1,6 +1,7 @@
 package com.trackwize.cloud.authentication.provider;
 
 import com.trackwize.cloud.authentication.constant.DBConst;
+import com.trackwize.cloud.authentication.model.entity.User;
 import org.apache.ibatis.jdbc.SQL;
 
 public class UserProvider {
@@ -28,6 +29,15 @@ public class UserProvider {
         return new SQL()
                 .SELECT("*")
                 .FROM(DBConst.USER_TABLE)
+                .WHERE("user_id = #{userId}")
+                .WHERE("status = " + DBConst.STATUS_ACTIVE)
+                .toString();
+    }
+
+    public String updatePassword(User user) {
+        return new SQL()
+                .UPDATE(DBConst.USER_TABLE)
+                .SET("password = #{password}")
                 .WHERE("user_id = #{userId}")
                 .WHERE("status = " + DBConst.STATUS_ACTIVE)
                 .toString();

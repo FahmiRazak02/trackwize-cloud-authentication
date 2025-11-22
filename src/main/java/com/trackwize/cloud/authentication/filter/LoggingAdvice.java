@@ -64,7 +64,7 @@ public class LoggingAdvice implements ResponseBodyAdvice<Object> {
                     formatHeaders(servletResponse),
                     formatBody(body)
             );
-            log.info("\n");
+            log.info("********************************************");
 
         } catch (Exception e) {
             log.warn("Failed to log response: {}", e.getMessage());

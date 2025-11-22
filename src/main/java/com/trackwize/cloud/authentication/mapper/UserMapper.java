@@ -31,4 +31,7 @@ public interface UserMapper {
     @SelectProvider(type = UserProvider.class, method = "findById")
     @ResultMap("userMap")
     User findById(Long userId);
+
+    @UpdateProvider(type = UserProvider.class, method = "updatePassword")
+    int updatePassword(User user);
 }

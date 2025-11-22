@@ -60,7 +60,7 @@ public class LoggingFilter extends OncePerRequestFilter {
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
         try {
-            log.info("\n");
+            log.info("********************************************");
             log.info("Incoming request: method={}, URI={}, userId={}",
                     wrappedRequest.getMethod(),
                     wrappedRequest.getRequestURI(),

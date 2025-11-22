@@ -19,6 +19,12 @@ public class EmailService {
 
     private final ActiveMQUtil activeMQUtil;
 
+    /**
+     * Send email notification by pushing message to ActiveMQ email queue.
+     *
+     * @param reqDTO The notification request data transfer object containing email details.
+     * @throws JsonProcessingException If there is an error during JSON processing.
+     */
     public void sendEmail(NotificationReqDTO reqDTO) throws JsonProcessingException {
         String correlationId = reqDTO.getTrackingId();
 

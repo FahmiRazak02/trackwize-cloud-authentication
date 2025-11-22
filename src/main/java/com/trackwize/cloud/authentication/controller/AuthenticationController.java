@@ -8,16 +8,16 @@ import com.trackwize.cloud.authentication.exception.TrackWizeException;
 import com.trackwize.cloud.authentication.model.dto.AuthenticationReqDTO;
 import com.trackwize.cloud.authentication.model.dto.AuthenticationResDTO;
 import com.trackwize.cloud.authentication.model.dto.EncryptResDTO;
+import com.trackwize.cloud.authentication.model.dto.ResetRequestDTO;
 import com.trackwize.cloud.authentication.service.AuthenticationService;
-import com.trackwize.cloud.authentication.service.TokenService;
 import com.trackwize.cloud.authentication.util.CookieUtil;
-import com.trackwize.cloud.authentication.util.EncryptUtil;
 import com.trackwize.cloud.authentication.util.ResponseUtil;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -27,35 +27,42 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
-    private final TokenService tokenService;
     private final TokenSecurityConfig tokenSecurityConfig;
 
-    @PostMapping("/encrypt/{password}")
+    /**
+     * Encrypt the given password and generate a random key.
+     *
+     * @param password The password to be encrypted.
+     * @return A ResponseUtil containing an EncryptResDTO with the encryption key and the encrypted password.
+     */
+    @PostMapping("encrypt/{password}")
     public ResponseUtil encryptPassword(
             @PathVariable String password
     ){
         log.info("Request Payload [Password]: {}", password);
-
-        String key = EncryptUtil.generateRandomKey(4);
-        String encrytedPassword = EncryptUtil.encrypt(password, key);
-
-        EncryptResDTO resDTO = new EncryptResDTO();
-        resDTO.setKey(key);
-        resDTO.setEncryptedPassword(encrytedPassword);
-
         ResponseUtil responseUtil = ResponseUtil.success();
+
+        EncryptResDTO resDTO = authenticationService.encrypt(password);
+
         responseUtil.setData(resDTO);
         return responseUtil;
     }
 
-    @PostMapping("/login")
+    /**
+     * Authenticate user and generate access and refresh tokens.
+     *
+     * @param reqDTO The authentication request data transfer object containing user credentials.
+     * @return A ResponseUtil containing an AuthenticationResDTO with the generated access and refresh tokens.
+     * @throws TrackWizeException If authentication fails or there is an error during token generation.
+     */
+    @PostMapping("login")
     public ResponseUtil login(
             @ModelAttribute("trackingId") String trackingId,
             @RequestBody AuthenticationReqDTO reqDTO,
             HttpServletResponse response
     ) throws TrackWizeException {
-        ResponseUtil resUtil = ResponseUtil.failure();
         log.info("Request Payload [AuthenticationReqDTO]: {}", reqDTO);
+        ResponseUtil responseUtil = ResponseUtil.success();
 
         AuthenticationResDTO resDTO = authenticationService.authenticateAccess(reqDTO);
         if (tokenSecurityConfig.isTokenCookieEnable()) {
@@ -76,12 +83,19 @@ public class AuthenticationController {
             CookieUtil.addSameSiteAttribute(response, "Lax");
         }
 
-        ResponseUtil responseUtil = ResponseUtil.success();
         responseUtil.setData(resDTO);
         return responseUtil;
     }
 
-    @PostMapping("/refresh")
+    /**
+     * Refresh the access token using the provided refresh token.
+     *
+     * @param userId       The ID of the user.
+     * @param refreshToken The refresh token to be validated.
+     * @return A ResponseUtil containing the new access token.
+     * @throws TrackWizeException If the refresh token is missing or invalid.
+     */
+    @PostMapping("refresh")
     public ResponseUtil refreshToken (
             @ModelAttribute("trackingId") String trackingId,
             @ModelAttribute("userId") String userId,
@@ -91,20 +105,14 @@ public class AuthenticationController {
         ResponseUtil resUtil = ResponseUtil.success();
         Long userIdL = Long.parseLong(userId);
 
-        if (refreshToken == null) {
+        if (StringUtils.isBlank(refreshToken)) {
             throw new TrackWizeException(
                     ErrorConst.MISSING_REFRESH_TOKEN_CODE,
                     ErrorConst.MISSING_REFRESH_TOKEN_MSG
             );
         }
 
-        boolean isValid = authenticationService.verifyRefreshToken(userIdL, refreshToken);
-        if (!isValid) {
-            throw new TrackWizeException(
-                    ErrorConst.INVALID_REFRESH_TOKEN_CODE,
-                    ErrorConst.INVALID_REFRESH_TOKEN_MSG
-            );
-        }
+        authenticationService.validateRefreshToken(userIdL, refreshToken);
 
         String token = authenticationService.generateNewAccessToken(userIdL);
         if (tokenSecurityConfig.isTokenCookieEnable()) {
@@ -122,6 +130,13 @@ public class AuthenticationController {
         return resUtil;
     }
 
+    /**
+     * Logout the user by invalidating the refresh token.
+     *
+     * @param refreshToken The refresh token to be invalidated.
+     * @return A ResponseUtil indicating successful logout.
+     * @throws TrackWizeException If the refresh token is missing.
+     */
     @PostMapping("logout")
     public ResponseUtil logout(
             @ModelAttribute("trackingId") String trackingId,
@@ -149,10 +164,19 @@ public class AuthenticationController {
             response.addCookie(refreshCookie);
         }
 
-        tokenService.logout(refreshToken);
+        authenticationService.logout(refreshToken);
         return responseUtil;
     }
 
+    /**
+     * Request a password reset token for the specified email.
+     *
+     * @param email The email address of the user requesting a password reset.
+     * @return A ResponseUtil containing the generated password reset token.
+     * @throws TrackWizeException      If there is an error during token generation.
+     * @throws MessagingException      If there is an error sending the reset email.
+     * @throws JsonProcessingException If there is an error processing JSON.
+     */
     @PostMapping("password-reset/request")
     public ResponseUtil requestPasswordReset(
             @ModelAttribute("trackingId") String trackingId,
@@ -161,9 +185,28 @@ public class AuthenticationController {
         log.info("Request Payload [Email]: {}", email);
         ResponseUtil responseUtil = ResponseUtil.success();
 
-        String token = tokenService.generatePasswordResetToken(email, trackingId);
+        String token = authenticationService.generatePasswordResetToken(email, trackingId);
 
         responseUtil.setData(token);
+        return responseUtil;
+    }
+
+    /**
+     * Process the password reset using the provided reset request data.
+     *
+     * @param reqDTO The reset request data transfer object containing the reset token and new password.
+     * @return A ResponseUtil indicating successful password reset.
+     * @throws TrackWizeException If there is an error during password update.
+     */
+    @PostMapping("password-reset/process")
+    public ResponseUtil processPasswordReset(
+            @ModelAttribute("trackingId") String trackingId,
+            @RequestBody ResetRequestDTO reqDTO
+    ) throws TrackWizeException {
+        log.info("Request Payload [ResetRequestDTO]: {}", reqDTO);
+        ResponseUtil responseUtil = ResponseUtil.success();
+
+        authenticationService.updatePassword(reqDTO);
         return responseUtil;
     }
 
