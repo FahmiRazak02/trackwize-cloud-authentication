@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.trackwize</groupId>
-	<artifactId>trackwize-cloud-authentication</artifactId>
+	<artifactId>trackwize-authentication-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>trackwize-cloud-authentication</name>
-	<description>Microservice for managing authenthication in TrackWize.</description>
+	<name>trackwize-authentication-service</name>
+	<description>Microservice for managing authentication in TrackWize.</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -31,6 +31,11 @@
         <jjwt.version>0.11.5</jjwt.version>
 	</properties>
 	<dependencies>
+        <dependency>
+            <groupId>com.trackwize</groupId>
+            <artifactId>trackwize-common</artifactId>
+            <version>0.0.1</version>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>

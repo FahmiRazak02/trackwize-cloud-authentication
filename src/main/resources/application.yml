@@ -5,13 +5,25 @@ server:
 
 spring:
   application:
-    name: trackwize-cloud-authentication
+    name: trackwize-authentication-service
 
   datasource:
     url: jdbc:mysql://localhost:3307/trackwize_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
     password: TrackWize@12345
     driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      connectionTimeout: 30000
+      idleTimeout: 600000
+      maxLifetime: 1800000
+      maximumPoolSize: 10
+      minimumIdle: 10
+      validationTimeout: 5000
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
 
   artemis:
     mode: native
@@ -37,3 +49,7 @@ smtp:
   port: 587
   username: email
   password: app-password
+
+  spring.output.ansi.enabled: always
+  logging.charset.console: UTF-8
+  logging.charset.file: UTF-8
