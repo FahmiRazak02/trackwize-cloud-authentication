@@ -16,8 +16,8 @@ public class User {
     private String password;
     private String contactNumber;
     private String name;
-    private String status;
 
+    private String status;
     private Long createdBy;
     private Instant createdDate;
     private Long updatedBy;

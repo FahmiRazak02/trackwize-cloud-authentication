@@ -167,4 +167,16 @@ public class AuthenticationService {
     public void logout(String refreshToken) {
         tokenService.logout(refreshToken);
     }
+
+    public String validateLoginRequest(AuthenticationReqDTO reqDTO) {
+        String errorBaseMsg = " is required.";
+
+        if (StringUtils.isBlank(reqDTO.getEmail()))
+            return "Email "  + errorBaseMsg;
+
+        if (StringUtils.isBlank(reqDTO.getEncryptedPassword()) && StringUtils.isBlank(reqDTO.getKey()))
+            return "Password " + errorBaseMsg;
+
+        return null;
+    }
 }

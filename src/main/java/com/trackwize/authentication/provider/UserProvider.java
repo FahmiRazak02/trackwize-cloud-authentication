@@ -6,8 +6,6 @@ import org.apache.ibatis.jdbc.SQL;
 
 public class UserProvider {
 
-
-
     public String findAll() {
         return new SQL()
                 .SELECT("*")
@@ -41,5 +39,11 @@ public class UserProvider {
                 .WHERE("user_id = #{userId}")
                 .WHERE("status = " + DBConst.STATUS_ACTIVE)
                 .toString();
+    }
+
+    public String create(User user) {
+        return new SQL()
+                .INSERT_INTO(DBConst.USER_TABLE)
+                .VALUES("", "")
     }
 }

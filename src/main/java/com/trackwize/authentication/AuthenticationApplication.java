@@ -6,8 +6,8 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {
-        "com.trackwize.cloud.authentication",
-        "com.trackwize.cloud.common"
+        "com.trackwize.authentication",
+        "com.trackwize.common"
 })
 public class AuthenticationApplication {
 

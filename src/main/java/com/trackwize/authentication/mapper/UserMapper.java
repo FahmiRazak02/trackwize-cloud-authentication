@@ -34,4 +34,7 @@ public interface UserMapper {
 
     @UpdateProvider(type = UserProvider.class, method = "updatePassword")
     int updatePassword(User user);
+
+    @InsertProvider(type = UserProvider.class, method = "create")
+    int create(User user);
 }

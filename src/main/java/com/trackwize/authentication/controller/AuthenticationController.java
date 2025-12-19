@@ -63,6 +63,14 @@ public class AuthenticationController {
         log.info("Request Payload [AuthenticationReqDTO]: {}", reqDTO);
         ResponseUtil responseUtil = ResponseUtil.success();
 
+        String isValid = authenticationService.validateLoginRequest(reqDTO);
+        if (StringUtils.isNotBlank(isValid)){
+            throw new TrackWizeException(
+                    ErrorConst.MISSING_REQUIRED_INPUT_CODE,
+                    isValid
+            );
+        }
+
         AuthenticationResDTO resDTO = authenticationService.authenticateAccess(reqDTO);
         if (tokenSecurityConfig.isTokenCookieEnable()) {
             Cookie accessCookie = CookieUtil.createCookie(

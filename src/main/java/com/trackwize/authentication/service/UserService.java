@@ -43,4 +43,8 @@ public class UserService {
 
         return true;
     }
+
+    public int create(User user) {
+        return userMapper.create(user);
+    }
 }
