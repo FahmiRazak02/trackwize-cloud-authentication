@@ -6,15 +6,11 @@ import com.trackwize.common.constant.ErrorConst;
 import com.trackwize.authentication.mapper.UserMapper;
 import com.trackwize.authentication.model.entity.User;
 import com.trackwize.common.exception.TrackWizeException;
-import com.trackwize.common.util.EncryptUtil;
-import com.trackwize.common.util.JWTUtil;
-import com.trackwize.common.util.PasswordValidatorUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 
 @Slf4j
 @Service
@@ -32,19 +28,6 @@ public class AuthenticationService {
     private final NotificationService notificationService;
 
     private final UserMapper userMapper;
-
-    /**
-     * Encrypt the given password and generate a random key.
-     *
-     * @param password The password to be encrypted.
-     * @return An EncryptResDTO containing the encryption key and the encrypted password.
-     */
-    public EncryptResDTO encrypt(String password) {
-//        Generate random key, encrypt the password and EncryptResDTO as response
-        String key = EncryptUtil.generateRandomKey(4);
-        String encryptedPassword = EncryptUtil.encrypt(password, key);
-        return new EncryptResDTO(key, encryptedPassword);
-    }
 
     /**
      * Authenticate user and generate access and refresh tokens.
@@ -119,7 +102,7 @@ public class AuthenticationService {
     public void updatePassword(ResetRequestDTO reqDTO, String token) throws TrackWizeException {
         String email = tokenService.getRedisValueByToken(token);
         if (StringUtils.isBlank(email)){
-            log.info("[{}] due to Invalid or expired reset token: [token] [{}]", ErrorConst.TOKEN_EXPIRED_CODE, token);
+            log.warn("[{}] due to invalid or expired reset token: [token] [{}]", ErrorConst.TOKEN_EXPIRED_CODE, token);
             throw new TrackWizeException(
                     ErrorConst.TOKEN_EXPIRED_CODE,
                     ErrorConst.TOKEN_EXPIRED_MSG
@@ -128,7 +111,7 @@ public class AuthenticationService {
 
         User user = userMapper.findByEmail(email);
         if (user == null) {
-            log.info("[{}] due to No user record found for:  [email] [{}].", ErrorConst.NO_RECORD_FOUND_CODE, email);
+            log.error("[{}] due to no user record found for:  [email] [{}].", ErrorConst.NO_RECORD_FOUND_CODE, email);
             throw new TrackWizeException(
                     ErrorConst.NO_RECORD_FOUND_CODE,
                     ErrorConst.NO_RECORD_FOUND_MSG
@@ -138,7 +121,7 @@ public class AuthenticationService {
 
         int result = userMapper.updatePassword(user);
         if (result <= 0) {
-            log.info("[{}] due to Failed to update new password for: [email] [{}]", ErrorConst.UPDATE_PASSWORD_FAILED_CODE, email);
+            log.error("[{}] due to failure when updating new password for: [email] [{}]", ErrorConst.UPDATE_PASSWORD_FAILED_CODE, email);
             throw new TrackWizeException(
                     ErrorConst.UPDATE_PASSWORD_FAILED_CODE,
                     ErrorConst.UPDATE_PASSWORD_FAILED_MSG
@@ -156,7 +139,7 @@ public class AuthenticationService {
      * @throws JsonProcessingException If there is an error processing JSON.
      */
     public void requestPasswordReset(String email, String trackingId) throws TrackWizeException, JsonProcessingException {
-        String token = tokenService.generatePasswordResetToken(email, trackingId);
+        String token = tokenService.generatePasswordResetToken(email);
         notificationService.sendPasswordResetEmail(email, token, trackingId);
     }
 

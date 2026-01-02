@@ -2,11 +2,9 @@ package com.trackwize.authentication.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trackwize.common.constant.ErrorConst;
-import com.trackwize.common.constant.NotificationConst;
 import com.trackwize.common.constant.TokenConst;
 import com.trackwize.authentication.mapper.TokenMapper;
 import com.trackwize.authentication.mapstruct.TokenMapStruct;
-import com.trackwize.authentication.model.dto.NotificationReqDTO;
 import com.trackwize.authentication.model.dto.TokenReqDTO;
 import com.trackwize.authentication.model.entity.Token;
 import com.trackwize.authentication.model.entity.User;
@@ -14,7 +12,6 @@ import com.trackwize.common.exception.TrackWizeException;
 import com.trackwize.common.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -28,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class TokenService {
 
-    private final NotificationService notificationService;
     private final TokenMapper tokenMapper;
     private final TokenMapStruct tokenMapStruct;
     private final JWTUtil jwtUtil;
@@ -49,7 +45,7 @@ public class TokenService {
 
         String token = jwtUtil.generateToken(claims, user.getUserId().toString(), accessTokenTimeout);
         if (StringUtils.isBlank(token)) {
-            log.info("{} due to Token generation return null.", ErrorConst.GENERATE_TOKEN_ERROR_CODE);
+            log.error("{} due to Token generation return null.", ErrorConst.GENERATE_TOKEN_ERROR_CODE);
             throw new TrackWizeException(
                     ErrorConst.GENERATE_TOKEN_ERROR_CODE,
                     ErrorConst.GENERATE_TOKEN_ERROR_MSG
@@ -73,18 +69,18 @@ public class TokenService {
             token.setUpdatedBy(tokenReqDTO.getUserId());
             result = tokenMapper.update(token);
             if (result <= 0) {
-                log.info("{} due to Updating token record failed for: [tokenReqDTO] [{}]", ErrorConst.PERSIST_TOKEN_ERROR_CODE, tokenReqDTO);
+                log.error("{} due to failure when updating token record for: [tokenReqDTO] [{}]", ErrorConst.PERSIST_TOKEN_ERROR_CODE, tokenReqDTO);
                 throw new TrackWizeException(
                         ErrorConst.PERSIST_TOKEN_ERROR_CODE,
                         ErrorConst.PERSIST_TOKEN_ERROR_MSG
                 );
-            };
+            }
         }
 
         token.setCreatedBy(tokenReqDTO.getUserId());
         result = tokenMapper.create(token);
         if (result <= 0) {
-            log.info("{} due to Creating token record failed for: [tokenReqDTO] [{}]", ErrorConst.PERSIST_TOKEN_ERROR_CODE, tokenReqDTO);
+            log.error("{} due to failure when creating token record for: [tokenReqDTO] [{}]", ErrorConst.PERSIST_TOKEN_ERROR_CODE, tokenReqDTO);
             throw new TrackWizeException(
                     ErrorConst.PERSIST_TOKEN_ERROR_CODE,
                     ErrorConst.PERSIST_TOKEN_ERROR_MSG
@@ -100,8 +96,8 @@ public class TokenService {
      */
     public void validateNoActiveSession(User user) {
         Token token = tokenMapper.findByUserId(user.getUserId());
-        if (ObjectUtils.isEmpty(token)) {
-            log.info("{} due to No Token record found in database for: [user_id] [{}]", ErrorConst.NO_RECORD_FOUND_CODE, user.getUserId());
+        if (token == null) {
+            log.error("{} due to no Token record found in database for: [user_id] [{}]", ErrorConst.NO_RECORD_FOUND_CODE, user.getUserId());
             throw new TrackWizeException(
                     ErrorConst.NO_RECORD_FOUND_CODE,
                     ErrorConst.NO_RECORD_FOUND_MSG
@@ -110,6 +106,7 @@ public class TokenService {
 
         boolean result = jwtUtil.validateToken(token.getAccessToken());
         if (!result) {
+            log.warn("{} due to user already has an active session: [user_id] [{}]", ErrorConst.USER_ALREADY_LOGGED_IN_CODE, user.getUserId());
             throw new TrackWizeException(
                     ErrorConst.USER_ALREADY_LOGGED_IN_CODE,
                     ErrorConst.USER_ALREADY_LOGGED_IN_MSG
@@ -145,15 +142,14 @@ public class TokenService {
      * Send the password reset link to the user email.
      *
      * @param email      The email address of the user.
-     * @param trackingId The tracking ID for the request.
      * @return The generated password reset token.
      * @throws TrackWizeException      If there is an error during token generation.
-     * @throws JsonProcessingException If there is an error processing JSON.
      */
-    public String generatePasswordResetToken(String email, String trackingId) throws TrackWizeException, JsonProcessingException {
+    public String generatePasswordResetToken(String email) throws TrackWizeException {
 //        1. Generate JWT-based password reset token
         String token = jwtUtil.generateToken(null, email, TokenConst.RESET_PASSWORD_TOKEN_EXPIRY);
         if (token == null) {
+            log.error("[{}] due to failure when generating token for: [email] [{}]", ErrorConst.GENERATE_TOKEN_ERROR_CODE, email);
             throw new TrackWizeException(
                     ErrorConst.GENERATE_TOKEN_ERROR_CODE,
                     ErrorConst.GENERATE_TOKEN_ERROR_MSG
@@ -181,7 +177,7 @@ public class TokenService {
 //        1. Check if the userId from the token matches the provided userId
         Long tokenUserId = jwtUtil.getSubject(refreshToken);
         if (!tokenUserId.equals(userId)) {
-            log.info("UserId from token does not match the provided userId: [user_id] [{}]", userId);
+            log.warn("UserId from token does not match the provided userId: [user_id] [{}]", userId);
             return false;
         }
 
@@ -190,14 +186,14 @@ public class TokenService {
 
 //        3. Check if the stored refresh token matches the provided token
         if (!token.getRefreshToken().equals(refreshToken)) {
-            log.info("Refresh token does not match the stored token: [refresh_token] [{}]", refreshToken);
+            log.warn("Refresh token does not match the stored token: [refresh_token] [{}]", refreshToken);
             return false;
         }
 
 //        4. Check if the token is valid (not expired, correct signature)
         boolean isValid = jwtUtil.validateToken(refreshToken);
         if (!isValid) {
-            log.info("Refresh token is not valid or has expired: [refresh_token] [{}]", refreshToken);
+            log.warn("Refresh token is not valid or has expired: [refresh_token] [{}]", refreshToken);
             return false;
         }
 
