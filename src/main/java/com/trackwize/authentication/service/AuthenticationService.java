@@ -127,13 +127,14 @@ public class AuthenticationService {
         }
 
         User user = userMapper.findByEmail(email);
-        if (ObjectUtils.isEmpty(user)) {
+        if (user == null) {
             log.info("[{}] due to No user record found for:  [email] [{}].", ErrorConst.NO_RECORD_FOUND_CODE, email);
             throw new TrackWizeException(
                     ErrorConst.NO_RECORD_FOUND_CODE,
                     ErrorConst.NO_RECORD_FOUND_MSG
             );
         }
+        user.setPassword(reqDTO.getPassword());
 
         int result = userMapper.updatePassword(user);
         if (result <= 0) {
