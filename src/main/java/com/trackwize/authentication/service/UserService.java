@@ -32,8 +32,7 @@ public class UserService {
     }
 
     public boolean validatePassword(AuthenticationReqDTO reqDTO, User user) {
-        String encryptedPassword = EncryptUtil.decrypt(reqDTO.getEncryptedPassword(), reqDTO.getKey());
-        boolean isPasswordMatch = PasswordUtil.isPasswordMatch(encryptedPassword, user.getPassword());
+        boolean isPasswordMatch = PasswordUtil.isPasswordMatch(reqDTO.getPassword(), user.getPassword());
         if (!isPasswordMatch) {
             throw new TrackWizeException(
                     ErrorConst.INVALID_CREDENTIALS_CODE,

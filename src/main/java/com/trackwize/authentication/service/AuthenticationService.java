@@ -4,12 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trackwize.authentication.model.dto.*;
 import com.trackwize.common.constant.ErrorConst;
 import com.trackwize.authentication.mapper.UserMapper;
-import com.trackwize.authentication.model.dto.*;
 import com.trackwize.authentication.model.entity.User;
 import com.trackwize.common.exception.TrackWizeException;
 import com.trackwize.common.util.EncryptUtil;
 import com.trackwize.common.util.JWTUtil;
-import com.trackwize.common.util.PasswordUtil;
+import com.trackwize.common.util.PasswordValidatorUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -30,8 +29,9 @@ public class AuthenticationService {
 
     private final TokenService tokenService;
     private final UserService userService;
+    private final NotificationService notificationService;
+
     private final UserMapper userMapper;
-    private final JWTUtil jwtUtil;
 
     /**
      * Encrypt the given password and generate a random key.
@@ -113,10 +113,11 @@ public class AuthenticationService {
      * Update the user's password using the provided reset request data.
      *
      * @param reqDTO The reset request data transfer object containing the reset token and new password.
+     * @param token The password reset token carried from password reset process
      * @throws TrackWizeException If there is an error during password update.
      */
-    public void updatePassword(ResetRequestDTO reqDTO) throws TrackWizeException {
-        String email = tokenService.getRedisValueByToken(reqDTO.getToken());
+    public void updatePassword(ResetRequestDTO reqDTO, String token) throws TrackWizeException {
+        String email = tokenService.getRedisValueByToken(token);
         if (StringUtils.isBlank(email)){
             log.info("{} due to: Invalid or expired reset token.", ErrorConst.TOKEN_EXPIRED_CODE);
             throw new TrackWizeException(
@@ -134,7 +135,6 @@ public class AuthenticationService {
             );
         }
 
-        user.setPassword(PasswordUtil.encryptPassword(EncryptUtil.decrypt(reqDTO.getEncryptedPassword(), reqDTO.getKey())));
         int result = userMapper.updatePassword(user);
         if (result <= 0) {
             log.info("{} due to: Failed to update new password.", ErrorConst.UPDATE_PASSWORD_FAILED_CODE);
@@ -151,12 +151,12 @@ public class AuthenticationService {
      *
      * @param email      The email address of the user.
      * @param trackingId The tracking ID for the request.
-     * @return The generated password reset token.
      * @throws TrackWizeException      If there is an error during token generation.
      * @throws JsonProcessingException If there is an error processing JSON.
      */
-    public String generatePasswordResetToken(String email, String trackingId) throws TrackWizeException, JsonProcessingException {
-        return tokenService.generatePasswordResetToken(email, trackingId);
+    public void requestPasswordReset(String email, String trackingId) throws TrackWizeException, JsonProcessingException {
+        String token = tokenService.generatePasswordResetToken(email, trackingId);
+        notificationService.sendPasswordResetEmail(email, token, trackingId);
     }
 
     /**
@@ -168,15 +168,4 @@ public class AuthenticationService {
         tokenService.logout(refreshToken);
     }
 
-    public String validateLoginRequest(AuthenticationReqDTO reqDTO) {
-        String errorBaseMsg = " is required.";
-
-        if (StringUtils.isBlank(reqDTO.getEmail()))
-            return "Email "  + errorBaseMsg;
-
-        if (StringUtils.isBlank(reqDTO.getEncryptedPassword()) && StringUtils.isBlank(reqDTO.getKey()))
-            return "Password " + errorBaseMsg;
-
-        return null;
-    }
 }

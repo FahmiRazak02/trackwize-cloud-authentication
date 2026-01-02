@@ -45,5 +45,6 @@ public class UserProvider {
         return new SQL()
                 .INSERT_INTO(DBConst.USER_TABLE)
                 .VALUES("", "")
+                .toString();
     }
 }

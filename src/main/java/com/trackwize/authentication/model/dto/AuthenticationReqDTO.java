@@ -1,5 +1,8 @@
 package com.trackwize.authentication.model.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +12,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AuthenticationReqDTO {
 
+    @NotBlank(message = "email is required")
+    @Email(message = "invalid email format")
     private String email;
-    private String encryptedPassword;
-    private String key;
+
+    @NotBlank(message = "password is required")
+    private String password;
 }
