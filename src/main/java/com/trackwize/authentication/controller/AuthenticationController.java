@@ -42,7 +42,6 @@ public class AuthenticationController {
             @RequestBody @Valid AuthenticationReqDTO reqDTO,
             HttpServletResponse response
     ) throws TrackWizeException {
-        log.info("Request Payload [AuthenticationReqDTO]: {}", reqDTO);
         ResponseUtil responseUtil = ResponseUtil.success();
 
         AuthenticationResDTO resDTO = authenticationService.authenticateAccess(reqDTO);

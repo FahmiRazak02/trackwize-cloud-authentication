@@ -119,7 +119,7 @@ public class AuthenticationService {
     public void updatePassword(ResetRequestDTO reqDTO, String token) throws TrackWizeException {
         String email = tokenService.getRedisValueByToken(token);
         if (StringUtils.isBlank(email)){
-            log.info("{} due to: Invalid or expired reset token.", ErrorConst.TOKEN_EXPIRED_CODE);
+            log.info("[{}] due to Invalid or expired reset token: [token] [{}]", ErrorConst.TOKEN_EXPIRED_CODE, token);
             throw new TrackWizeException(
                     ErrorConst.TOKEN_EXPIRED_CODE,
                     ErrorConst.TOKEN_EXPIRED_MSG
@@ -128,7 +128,7 @@ public class AuthenticationService {
 
         User user = userMapper.findByEmail(email);
         if (ObjectUtils.isEmpty(user)) {
-            log.info("{} due to: No user record found for this email {}.", ErrorConst.NO_RECORD_FOUND_CODE, email);
+            log.info("[{}] due to No user record found for:  [email] [{}].", ErrorConst.NO_RECORD_FOUND_CODE, email);
             throw new TrackWizeException(
                     ErrorConst.NO_RECORD_FOUND_CODE,
                     ErrorConst.NO_RECORD_FOUND_MSG
@@ -137,7 +137,7 @@ public class AuthenticationService {
 
         int result = userMapper.updatePassword(user);
         if (result <= 0) {
-            log.info("{} due to: Failed to update new password.", ErrorConst.UPDATE_PASSWORD_FAILED_CODE);
+            log.info("[{}] due to Failed to update new password for: [email] [{}]", ErrorConst.UPDATE_PASSWORD_FAILED_CODE, email);
             throw new TrackWizeException(
                     ErrorConst.UPDATE_PASSWORD_FAILED_CODE,
                     ErrorConst.UPDATE_PASSWORD_FAILED_MSG
