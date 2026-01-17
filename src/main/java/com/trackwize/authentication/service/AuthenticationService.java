@@ -47,8 +47,8 @@ public class AuthenticationService {
         tokenService.validateNoActiveSession(user);
 
 //        4. Generate JWT tokens
-        String accessToken = tokenService.generateToken(user, defaultAccessTokenTimeout);
-        String refreshToken = tokenService.generateToken(user, defaultRefreshTokenTimeout);
+        String accessToken = tokenService.generateUserAccessToken(user, defaultAccessTokenTimeout);
+        String refreshToken = tokenService.generateUserAccessToken(user, defaultRefreshTokenTimeout);
 
         TokenReqDTO tokenReqDTO = new TokenReqDTO();
         tokenReqDTO.setUserId(user.getUserId());
@@ -89,7 +89,7 @@ public class AuthenticationService {
      */
     public String generateNewAccessToken(Long userId) throws TrackWizeException {
         User user = userMapper.findById(userId);
-        return tokenService.generateToken(user, defaultAccessTokenTimeout);
+        return tokenService.generateUserAccessToken(user, defaultAccessTokenTimeout);
     }
 
     /**
@@ -140,6 +140,7 @@ public class AuthenticationService {
      */
     public void requestPasswordReset(String email, String trackingId) throws TrackWizeException, JsonProcessingException {
         String token = tokenService.generatePasswordResetToken(email);
+
         notificationService.sendPasswordResetEmail(email, token, trackingId);
     }
 
