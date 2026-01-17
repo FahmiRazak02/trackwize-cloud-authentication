@@ -44,7 +44,13 @@ public class UserProvider {
     public String create(User user) {
         return new SQL()
                 .INSERT_INTO(DBConst.USER_TABLE)
-                .VALUES("", "")
+                .VALUES("email", "#{email}")
+                .VALUES("password", "#{password}")
+                .VALUES("contact_number", "#{contactNumber}")
+                .VALUES("name", "#{name}")
+                .VALUES("status", "#{status}")
+                .VALUES("created_by", "#{createdBy}")
+                .VALUES("updated_by", "#{updatedBy}")
                 .toString();
     }
 }

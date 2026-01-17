@@ -1,6 +1,5 @@
 package com.trackwize.authentication.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trackwize.common.constant.ErrorConst;
 import com.trackwize.common.constant.TokenConst;
 import com.trackwize.authentication.mapper.TokenMapper;
@@ -38,7 +37,7 @@ public class TokenService {
      * @return The generated JWT token as a String.
      * @throws TrackWizeException If there is an error during token generation.
      */
-    public String generateToken(User user, int accessTokenTimeout) {
+    public String generateUserAccessToken(User user, int accessTokenTimeout) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("name", user.getName());
         claims.put("email", user.getEmail());
@@ -198,5 +197,22 @@ public class TokenService {
         }
 
         return true;
+    }
+
+    public String generateEmailVerificationToken(String email) throws TrackWizeException {
+//        1. Generate JWT-based password reset token
+        String token = jwtUtil.generateToken(null, email, TokenConst.ACCOUNT_VERIFICATION_TOKEN_EXPIRY);
+        if (token == null) {
+            log.error("[{}] due to failure when generating token for: [email] [{}]", ErrorConst.GENERATE_TOKEN_ERROR_CODE, email);
+            throw new TrackWizeException(
+                    ErrorConst.GENERATE_TOKEN_ERROR_CODE,
+                    ErrorConst.GENERATE_TOKEN_ERROR_MSG
+            );
+        }
+//        2. Store token→email mapping in Redis with expiry
+        redisTemplate.opsForValue().set(token, email, TokenConst.ACCOUNT_VERIFICATION_TOKEN_EXPIRY, TimeUnit.MINUTES);
+
+//        3. return token as response
+        return token;
     }
 }

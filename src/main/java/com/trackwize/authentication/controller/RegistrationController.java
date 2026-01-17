@@ -1,15 +1,13 @@
 package com.trackwize.authentication.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trackwize.authentication.model.dto.UserRegistrationReqDTO;
 import com.trackwize.authentication.service.RegistrationService;
 import com.trackwize.common.util.ResponseUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -21,11 +19,19 @@ public class RegistrationController {
 
     @PostMapping("/submit")
     public ResponseUtil submitUserRegistration(
+            @ModelAttribute("trackingId") String trackingId,
             @RequestBody @Valid UserRegistrationReqDTO reqDTO
-    ) {
+    ) throws JsonProcessingException {
         ResponseUtil responseUtil = ResponseUtil.success();
 
-        registrationService.submitUserRegistration(reqDTO);
+        registrationService.submitUserRegistration(reqDTO,trackingId);
+
+        responseUtil.setMsg("User Account is Created, Please Check your email for verification.");
         return responseUtil;
+    }
+
+    @PostMapping("/verify")
+    public ResponseUtil verifyUserAccount(){
+        return ResponseUtil.success();
     }
 }
