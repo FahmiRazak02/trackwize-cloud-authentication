@@ -53,4 +53,12 @@ public class UserProvider {
                 .VALUES("updated_by", "#{updatedBy}")
                 .toString();
     }
+
+    public String updateRecordStatus(String email, String status) {
+        return new SQL()
+                .UPDATE(DBConst.USER_TABLE)
+                .SET("record_status = #{status}")
+                .WHERE("email = #{email}")
+                .toString();
+    }
 }

@@ -5,9 +5,12 @@ import com.trackwize.authentication.mapstruct.UserMapStruct;
 import com.trackwize.authentication.model.dto.UserRegistrationReqDTO;
 import com.trackwize.authentication.model.entity.User;
 import com.trackwize.common.constant.DBConst;
+import com.trackwize.common.constant.ErrorConst;
+import com.trackwize.common.exception.TrackWizeException;
 import com.trackwize.common.util.PasswordUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -44,5 +47,19 @@ public class RegistrationService {
         String token = tokenService.generateEmailVerificationToken(reqDTO.getEmail());
 
         notificationService.sendAccountVerificationEmail(user.getEmail(), user.getName(), trackingId, token);
+    }
+
+    public void verifyAccount(String token) {
+        String email = tokenService.getRedisValueByToken(token);
+
+        if (StringUtils.isBlank(email)) {
+            log.warn("[{}] due to invalid or expired reset token: [token] [{}]", ErrorConst.TOKEN_EXPIRED_CODE, token);
+            throw new TrackWizeException(
+                    ErrorConst.TOKEN_EXPIRED_CODE,
+                    ErrorConst.TOKEN_EXPIRED_MSG
+            );
+        }
+
+        userService.activateUserAccount(email);
     }
 }

@@ -37,4 +37,10 @@ public interface UserMapper {
 
     @InsertProvider(type = UserProvider.class, method = "create")
     int create(User user);
+
+    @UpdateProvider(type = UserProvider.class, method = "updateRecordStatus")
+    int updateRecordStatus(
+            @Param("email") String email,
+            @Param("status") String status
+    );
 }

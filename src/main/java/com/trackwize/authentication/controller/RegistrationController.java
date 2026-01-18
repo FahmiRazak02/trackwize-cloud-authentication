@@ -26,12 +26,19 @@ public class RegistrationController {
 
         registrationService.submitUserRegistration(reqDTO,trackingId);
 
-        responseUtil.setMsg("User Account is Created, Please Check your email for verification.");
+        responseUtil.setMsg("User Account is Created, Please Check your email for verification link.");
         return responseUtil;
     }
 
-    @PostMapping("/verify")
-    public ResponseUtil verifyUserAccount(){
-        return ResponseUtil.success();
+    @PostMapping("/verify-account")
+    public ResponseUtil verifyUserAccount(
+            @PathVariable String token
+    ){
+        ResponseUtil responseUtil = ResponseUtil.success();
+
+        registrationService.verifyAccount(token);
+
+        responseUtil.setMsg("User Account is Verified, Enjoy!");
+        return responseUtil;
     }
 }

@@ -1,11 +1,11 @@
 package com.trackwize.authentication.service;
 
+import com.trackwize.common.constant.DBConst;
 import com.trackwize.common.constant.ErrorConst;
 import com.trackwize.authentication.mapper.UserMapper;
 import com.trackwize.authentication.model.dto.AuthenticationReqDTO;
 import com.trackwize.authentication.model.entity.User;
 import com.trackwize.common.exception.TrackWizeException;
-import com.trackwize.common.util.EncryptUtil;
 import com.trackwize.common.util.PasswordUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public class UserService {
     public void create(User user) {
         int createResult = userMapper.create(user);
 
-        if (createResult <= 0) {
+        if (createResult < 1) {
             log.error(
                     "[{}] due to failure when creating user record for: [email] [{}]",
                     ErrorConst.CREATE_RECORD_FAILED_CODE,
@@ -64,5 +64,22 @@ public class UserService {
                     ErrorConst.CREATE_RECORD_FAILED_MSG
             );
         }
+    }
+
+    public void activateUserAccount(String email) {
+        int result = userMapper.updateRecordStatus(email, DBConst.STATUS_PENDING);
+        if (result < 1) {
+            log.error(
+                    "[{}] due to failure when updating user record status for: [email] [{}]",
+                    ErrorConst.UPDATE_RECORD_FAILED_CODE,
+                    email
+            );
+
+            throw new TrackWizeException(
+                    ErrorConst.UPDATE_RECORD_FAILED_CODE,
+                    ErrorConst.UPDATE_RECORD_FAILED_MSG
+            );
+        }
+
     }
 }
