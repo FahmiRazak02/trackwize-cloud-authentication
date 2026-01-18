@@ -96,13 +96,13 @@ public class NotificationService {
     }
 
     public void sendAccountVerificationEmail(String email, String name, String token, String trackingId) throws JsonProcessingException {
-        var reqDTO = buildAccVerificationReqDTO(email, name, token);
+        var reqDTO = buildAccountVerificationReqDTO(email, name, token);
         reqDTO.setTrackingId(trackingId);
 
         sendEmail(reqDTO);
     }
 
-    private NotificationReqDTO buildAccVerificationReqDTO(String email, String name, String token) {
+    private NotificationReqDTO buildAccountVerificationReqDTO(String email, String name, String token) {
         var reqDTO = new NotificationReqDTO();
         reqDTO.setNotificationType(NotificationConst.EMAIL_NTF_TYPE);
         reqDTO.setTemplate(NotificationConst.ACCOUNT_VERIFICATION_TEMPLATE);
@@ -115,6 +115,28 @@ public class NotificationService {
         contents.put("name", name);
         contents.put("token", token);
         contents.put("expiry", TokenConst.ACCOUNT_VERIFICATION_TOKEN_EXPIRY);
+
+        reqDTO.setContents(contents);
+        return reqDTO;
+    }
+
+    public void sendAccountCreatedEmail(String email, String trackingId) throws JsonProcessingException {
+        var reqDTO = buildAccountCreatedReqDTO(email);
+        reqDTO.setTrackingId(trackingId);
+
+        sendEmail(reqDTO);
+    }
+
+    private NotificationReqDTO buildAccountCreatedReqDTO(String email) {
+        var reqDTO = new NotificationReqDTO();
+        reqDTO.setNotificationType(NotificationConst.EMAIL_NTF_TYPE);
+        reqDTO.setTemplate(NotificationConst.ACCOUNT_VERIFICATION_TEMPLATE);
+        reqDTO.setRecipient(email);
+        reqDTO.setSubject("Trackwize Account");
+
+        Map<String, Object> contents = new HashMap<>();
+        contents.put("Title", "Trackwize Account Activate");
+        contents.put("message", "Your Account is Ready to Roll!");
 
         reqDTO.setContents(contents);
         return reqDTO;

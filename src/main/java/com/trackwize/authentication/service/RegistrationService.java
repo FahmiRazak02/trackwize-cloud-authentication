@@ -49,7 +49,7 @@ public class RegistrationService {
         notificationService.sendAccountVerificationEmail(user.getEmail(), user.getName(), trackingId, token);
     }
 
-    public void verifyAccount(String token) {
+    public void verifyAccount(String token, String trackingId) {
         String email = tokenService.getRedisValueByToken(token);
 
         if (StringUtils.isBlank(email)) {
@@ -61,5 +61,7 @@ public class RegistrationService {
         }
 
         userService.activateUserAccount(email);
+
+        notificationService.sendAccountCreatedEmail(email, trackingId);
     }
 }

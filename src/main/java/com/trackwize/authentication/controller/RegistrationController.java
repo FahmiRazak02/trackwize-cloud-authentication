@@ -32,11 +32,12 @@ public class RegistrationController {
 
     @PostMapping("/verify-account")
     public ResponseUtil verifyUserAccount(
+            @ModelAttribute("trackingId") String trackingId,
             @PathVariable String token
     ){
         ResponseUtil responseUtil = ResponseUtil.success();
 
-        registrationService.verifyAccount(token);
+        registrationService.verifyAccount(token, trackingId);
 
         responseUtil.setMsg("User Account is Verified, Enjoy!");
         return responseUtil;
